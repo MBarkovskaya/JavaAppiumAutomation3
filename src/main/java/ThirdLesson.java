@@ -36,44 +36,16 @@ public class ThirdLesson {
         driver.quit();
     }
 
-    @Test
-    public void findTextSearchIntoInputFieldTest() {
-        waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
-
-        waitForElementAndClick(By.xpath("//*[contains(@text,'Search Wikipedia')]"), "Cannot find search input", 5);
-        WebElement titleElement = waitForElementPresent(By.id("org.wikipedia:id/search_src_text"), "Cannot find 'Search Wikipedia' text into the input field");
-        String searchWikipediaText = titleElement.getAttribute("text");
-
-        Assert.assertEquals("We see unexpected title", "Search Wikipedia", searchWikipediaText);
-
-
 //        driver.rotate(ScreenOrientation.LANDSCAPE);
 
 //        driver.runAppInBackground(2);
-
-    }
-
-    @Test
-    public void searchByWordAndCancelSearchingTest() {
-        waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
-        waitForElementAndClick(By.xpath("//*[contains(@text,'Search Wikipedia')]"), "Cannot find search input", 5);
-
-        waitForElementAndSendKeys(By.xpath("//*[contains(@text,'Search Wikipedia')]"), "Java", "Cannot find search input", 5);
-        WebElement listOfResults = waitForElementPresent(By.xpath("//*[@resource-id='org.wikipedia:id/search_results_list']"), "Cannot find list of searching results");
-        int size = listOfResults.findElements(By.xpath("//*[@class='android.view.ViewGroup']//*[@resource-id='org.wikipedia:id/page_list_item_title']")).size();
-
-        Assert.assertTrue("The searching finds some articles", size > 0);
-        waitForElementAndClick(By.xpath("//*[@resource-id='org.wikipedia:id/search_close_btn']"), "Cannot find close button", 0);
-        boolean resultIsEmpty = waitForElementNotPresent(By.xpath("//*[@resource-id='org.wikipedia:id/search_results_list']"), "The list of searching results is still on the page", 5);
-        Assert.assertTrue("There are some results of empty searching", resultIsEmpty);
-    }
 
     @Test
     public void saveTwoArticleTest() {
         String firstArticleText = "Java";
         String secondArticleText = "Java (programming language)";
         String folderName = "newFolder";
-        String folderDescriptionItemTitle = "1 of 1 articles available offline, 4.16 MB";
+        String folderDescriptionItemTitle = "1 article, 4.16 MB";
 
 //open Search Wikipedia page with searching input field
         waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
@@ -87,37 +59,28 @@ public class ThirdLesson {
 //open the "Java (programming language)" article and add the article to created reading list
         waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", secondArticleText)), "Broken " + secondArticleText + "link", 5);
         waitForElementAndClick(By.xpath("//*[@resource-id='org.wikipedia:id/article_menu_bookmark']"), "Article menu bookmark doesn't work", 5);
-//remove one article from the reading list
         waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", folderName)), "Broken " + folderName + "link", 5);
+//remove one article from the reading list
         waitForElementAndClick(By.xpath("//*[@resource-id='org.wikipedia:id/page_toolbar_button_show_overflow_menu']"), "Cannot open the menu", 5);
         waitForElementAndClick(By.xpath("//*[@resource-id='org.wikipedia:id/page_action_overflow_reading_lists']"), "The action overflow reading lists doesn't work", 5);
-        waitForElementAndClick(By.xpath("//*[@class='android.widget.LinearLayout']/*[@text='No thanks']"), "There isn't the notification 'Sync reading lists'", 5);
+        waitForElementAndClick(By.xpath("//*[@class='android.widget.LinearLayout']/*[@text='No thanks']"), "There isn't the notification 'Sync reading lists'", 10);
         waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", folderName)), "Cannot open the new reading list", 5);
         swipeElementToLeft(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", secondArticleText)), "The saved article was not found");
 //open the reading list and make sure another article is in the reading list
         waitForElementAndClick(By.xpath("//*[@resource-id='org.wikipedia:id/reading_list_toolbar']/*[@class='android.widget.ImageButton']"), "Cannot get back to the My list", 5);
-        waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", folderName)), "Cannot open the reading list", 5);
-
         checkTitleText("text", folderDescriptionItemTitle,
-                By.xpath("//*[@class='android.view.ViewGroup']/*[@resource-id='org.wikipedia:id/item_reading_list_statistical_description']"));
+                By.xpath("//*[@class='android.view.ViewGroup'][2]/*[@class='android.widget.TextView'][2]"));
+        waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", folderName)), "Cannot open the reading list", 5);
         waitForElementAndClick(By.xpath("//*[@class='android.view.ViewGroup']/*[@resource-id='org.wikipedia:id/item_reading_list_statistical_description']"),
                 "Cannot open the reading list", 5);
-        //android.view.View[@content-desc="Java"])[1]
-//open the another article link from the list
 
+//open another article link from the list and make sure the article title into the reading list is equal to the article title opened by reference
         String articleTitleInFolder = waitForElementPresent(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", firstArticleText)),
                 "Cannot find " + firstArticleText + "textReference on the page").getAttribute("text");
         waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", firstArticleText)), "Cannot open the reference", 5);
-        String articleTitleByReference = waitForElementPresent(By.xpath("//*[@class='android.view.View'/*[@content-desc='Java']"),
-                "Cannot find " + firstArticleText + "title on the page").getAttribute("text");
-        System.out.println(articleTitleByReference);
-//
-
-//
-//        WebElement listOfResults = waitForElementPresent(By.xpath("//*[@resource-id='org.wikipedia:id/search_results_list']"), "Cannot find list of searching results");
-//        List<WebElement> resultsOfSearching = listOfResults.findElements(By.xpath("//*[@class='android.view.ViewGroup']//*[@resource-id='org.wikipedia:id/page_list_item_title']"));
-//        for (WebElement webElement : resultsOfSearching) {
-//            Assert.assertTrue("There aren't any word 'Java' into the each of searching result", webElement.getAttribute("text").toLowerCase().contains("java"));
+        WebElement articleTitleOpenedByReference = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
+                "Cannot find " + firstArticleText + " title on the page", 10);
+        Assert.assertEquals(articleTitleInFolder, articleTitleOpenedByReference.getAttribute("content-desc"));
     }
 
 
