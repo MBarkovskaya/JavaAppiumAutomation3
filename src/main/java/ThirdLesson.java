@@ -5,9 +5,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -36,16 +34,12 @@ public class ThirdLesson {
         driver.quit();
     }
 
-//        driver.rotate(ScreenOrientation.LANDSCAPE);
-
-//        driver.runAppInBackground(2);
-
     @Test
     public void saveTwoArticleTest() {
         String firstArticleText = "Java";
         String secondArticleText = "Java (programming language)";
         String folderName = "newFolder";
-        String folderDescriptionItemTitle = "1 article, 4.16 MB";
+        String folderDescriptionItemTitle = "1 article";
 
 //open Search Wikipedia page with searching input field
         waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
@@ -77,10 +71,73 @@ public class ThirdLesson {
 //open another article link from the list and make sure the article title into the reading list is equal to the article title opened by reference
         String articleTitleInFolder = waitForElementPresent(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", firstArticleText)),
                 "Cannot find " + firstArticleText + "textReference on the page").getAttribute("text");
+
         waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", firstArticleText)), "Cannot open the reference", 5);
-        WebElement articleTitleOpenedByReference = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
-                "Cannot find " + firstArticleText + " title on the page", 10);
-        Assert.assertEquals(articleTitleInFolder, articleTitleOpenedByReference.getAttribute("content-desc"));
+
+        String articleTitleOpenedByReference = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
+                "Cannot find " + firstArticleText + " title on the page", 10).getAttribute("name");
+
+        Assert.assertEquals(articleTitleInFolder, articleTitleOpenedByReference);
+    }
+//
+//    Виталий Котов, [10.06.19 15:16]
+//    WebElement title_element = waitForTitleElement();
+//
+//        if (Platform.getInstance().isAndroid()){
+//        return title_element.getAttribute("text");
+//    } else if (Platform.getInstance().isIOS()) {
+//        return title_element.getAttribute("name");
+//    } else {
+//        return title_element.getText();
+//    }
+
+//    private int getAmountOfElements(By locator) {
+//        List elements = driver.findElements(locator);
+//        return elements.size();
+//    }
+
+    @Test
+    public void assertTitleTest() {
+        String articleTitle = "Java";
+        By articleTitleLocator = By.xpath("(//android.view.View[@content-desc='Java'])[1]");
+
+//open Search Wikipedia page with searching input field
+        waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
+        waitForElementAndClick(By.xpath("//*[contains(@text,'Search Wikipedia')]"), "Cannot find search input", 5);
+//search "Java" and get to the referenceJava page
+        waitForElementAndSendKeys(By.xpath("//*[contains(@text,'Search Wikipedia')]"), articleTitle, "Cannot find search input", 5);
+        waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", articleTitle)), "Broken " + articleTitle + "link", 5);
+        assertElementPresent(articleTitleLocator, "We've not found the article title with name \"" + articleTitle + "\"");
+    }
+
+//        driver.runAppInBackground(2);
+
+    @Test
+    public void screenRotationTest() {
+        String articleTitle = "Java";
+
+        driver.rotate(ScreenOrientation.PORTRAIT);
+
+//open Search Wikipedia page with searching input field
+        waitForElementAndClick(By.id("org.wikipedia:id/fragment_onboarding_skip_button"), "Cannot find SKIP button", 5);
+        waitForElementAndClick(By.xpath("//*[contains(@text,'Search Wikipedia')]"), "Cannot find search input", 5);
+//search "Java" and get to the referenceJava page
+        waitForElementAndSendKeys(By.xpath("//*[contains(@text,'Search Wikipedia')]"), articleTitle, "Cannot find search input", 5);
+        waitForElementAndClick(By.xpath(String.format("//*[@class='android.view.ViewGroup']/*[@text='%s']", articleTitle)), "Broken " + articleTitle + "link", 5);
+
+        String titleBeforRotation = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
+                "Cannot find " + articleTitle + " title on the page", 10).getAttribute("name");
+        driver.rotate(ScreenOrientation.LANDSCAPE);
+        String titleAfterRotation = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
+                "Cannot find " + articleTitle + " title on the page", 10).getAttribute("name");
+
+        Assert.assertEquals("Article title have been changed after screen rotation", titleBeforRotation, titleAfterRotation);
+
+        driver.rotate(ScreenOrientation.PORTRAIT);
+        String titleAfterSecondRotation = waitForElementPresent(By.xpath("(//android.view.View[@content-desc='Java'])[1]"),
+                "Cannot find " + articleTitle + " title on the page", 10).getAttribute("name");
+
+        Assert.assertEquals("Article title have been changed after screen rotation", titleAfterRotation, titleAfterSecondRotation);
     }
 
 
@@ -154,8 +211,18 @@ public class ThirdLesson {
 
     private void checkTitleText(String attributeName, String textTitle, By locator) {
         WebElement titleElement = waitForElementPresent(locator, "Cannot find " + textTitle + "title on the page");
-        String searchingTitle = titleElement.getAttribute(attributeName);
+        String searchingTitle = titleElement.getAttribute(attributeName).substring(0, 9);
 
         Assert.assertEquals("We see unexpected title", textTitle, searchingTitle);
+    }
+
+    private WebElement assertElementPresent(By locator, String errMsg) {
+        try {
+            WebElement element = driver.findElement(locator);
+            return element;
+        } catch (NoSuchElementException e) {
+            String defaultMessage = "An element '" + locator.toString() + "' supposed to be present.";
+            throw new AssertionError(defaultMessage + " " + errMsg);
+        }
     }
 }
